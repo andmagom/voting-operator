@@ -1,0 +1,24 @@
+# permissions for end users to edit votingapps.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: votingapp-editor-role
+rules:
+- apiGroups:
+  - poll.vmware.com
+  resources:
+  - votingapps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - poll.vmware.com
+  resources:
+  - votingapps/status
+  verbs:
+  - get

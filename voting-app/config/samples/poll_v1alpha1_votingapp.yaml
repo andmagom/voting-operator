@@ -1,0 +1,7 @@
+apiVersion: poll.vmware.com/v1alpha1
+kind: VotingApp
+metadata:
+  name: votingapp-sample
+spec:
+  # Add fields here
+  foo: bar
