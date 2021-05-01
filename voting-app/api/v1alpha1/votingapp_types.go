@@ -29,8 +29,9 @@ type VotingAppSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of VotingApp. Edit votingapp_types.go to remove/update
-	OptionA string `json:"optionA,omitempty"`
-	OptionB string `json:"optionB,omitempty"`
+	OptionA           string `json:"optionA,omitempty"`
+	OptionB           string `json:"optionB,omitempty"`
+	VotingAppReplicas int32  `json:"votingAppReplicas"`
 }
 
 // VotingAppStatus defines the observed state of VotingApp

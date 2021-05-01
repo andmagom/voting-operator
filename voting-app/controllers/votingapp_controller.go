@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,7 +27,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	pollv1alpha1 "github.com/andmagom/voting-operator/api/v1alpha1"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+var log = logf.Log.WithName("controller_visitorsapp")
 
 // VotingAppReconciler reconciles a VotingApp object
 type VotingAppReconciler struct {
@@ -48,9 +53,32 @@ type VotingAppReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
 func (r *VotingAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("votingapp", req.NamespacedName)
+	log := r.Log.WithValues("votingapp", req.NamespacedName)
+
+	// Fetch the VotingApp instance
+	votingapp := &pollv1alpha1.VotingApp{}
+	err := r.Get(ctx, req.NamespacedName, votingapp)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			log.Info("VotingApp resource not found. Ignoring since object must be deleted")
+			return ctrl.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		log.Error(err, "Failed to get VotingApp")
+		return ctrl.Result{}, err
+	}
 
 	// your logic here
+	// Check deployments are the expected
+	var result *reconcile.Result
+
+	result, err = r.ensureDeployment(req, votingapp, r.votingAppDeployment(votingapp))
+	if result != nil {
+		return *result, err
+	}
 
 	return ctrl.Result{}, nil
 }

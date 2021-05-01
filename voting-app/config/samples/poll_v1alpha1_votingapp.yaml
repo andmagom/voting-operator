@@ -4,4 +4,6 @@ metadata:
   name: votingapp-sample
 spec:
   # Add fields here
-  foo: bar
+  optionA: "red"
+  optionB: "blue"
+  votingAppReplicas: 2
