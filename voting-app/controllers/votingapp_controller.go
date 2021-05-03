@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -99,6 +101,17 @@ func (r *VotingAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	result, err = r.ensureService(req, votingapp, r.DBService(votingapp))
 	if result != nil {
 		return *result, err
+	}
+
+	dbRunning := r.isDBUp(votingapp)
+
+	if !dbRunning {
+		// If DB isn't running yet, requeue the reconcile
+		// to run again after a delay
+		delay := time.Second * time.Duration(5)
+
+		log.Info(fmt.Sprintf("MySQL isn't running, waiting for %s", delay))
+		return reconcile.Result{RequeueAfter: delay}, nil
 	}
 
 	// == Redis ==========
