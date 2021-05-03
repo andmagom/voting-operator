@@ -13,7 +13,7 @@ func votingDeploymentName(v *pollv1alpha1.VotingApp) string {
 }
 
 func (r *VotingAppReconciler) votingAppDeployment(v *pollv1alpha1.VotingApp) *appsv1.Deployment {
-	labels := labels("voting-app")
+	labels := labels(v.Name + "-voting-app")
 	size := v.Spec.VotingAppReplicas
 
 	env := []corev1.EnvVar{}
@@ -61,9 +61,9 @@ func (r *VotingAppReconciler) votingAppDeployment(v *pollv1alpha1.VotingApp) *ap
 
 func (r *VotingAppReconciler) ServiceVotingApp(v *pollv1alpha1.VotingApp) *corev1.Service {
 	serviceName := "svc-voting-app-" + v.Name
-	selector := labels(v.Name + "redis-app")
+	selector := labels(v.Name + "-voting-app")
 
-	svc := ServiceScheme(v.Namespace, serviceName, selector, 80, corev1.ServiceTypeNodePort)
+	svc := ServiceScheme(v.Namespace, serviceName, selector, 80, corev1.ServiceTypeLoadBalancer)
 
 	controllerutil.SetControllerReference(v, svc, r.Scheme)
 	return svc

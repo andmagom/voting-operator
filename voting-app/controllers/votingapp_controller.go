@@ -110,12 +110,17 @@ func (r *VotingAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// to run again after a delay
 		delay := time.Second * time.Duration(5)
 
-		log.Info(fmt.Sprintf("MySQL isn't running, waiting for %s", delay))
+		log.Info(fmt.Sprintf("Postgres isn't running, waiting for %s", delay))
 		return reconcile.Result{RequeueAfter: delay}, nil
 	}
 
 	// == Redis ==========
 	result, err = r.ensureDeployment(req, votingapp, r.RedisDeployment(votingapp))
+	if result != nil {
+		return *result, err
+	}
+
+	result, err = r.ensureService(req, votingapp, r.RedisService(votingapp))
 	if result != nil {
 		return *result, err
 	}
@@ -127,6 +132,13 @@ func (r *VotingAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	result, err = r.ensureService(req, votingapp, r.ResultService(votingapp))
+	if result != nil {
+		return *result, err
+	}
+
+	// == Worker ========
+	result, err = r.ensureDeployment(req, votingapp, r.workerDeployment(votingapp))
+	fmt.Println("Worker")
 	if result != nil {
 		return *result, err
 	}

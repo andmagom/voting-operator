@@ -49,7 +49,7 @@ func (r *VotingAppReconciler) DBService(v *pollv1alpha1.VotingApp) *corev1.Servi
 	serviceName := "svc-db-" + v.Name
 	selector := dbAppLabels(v)
 
-	svc := ServiceScheme(v.Namespace, serviceName, selector, dbPort, corev1.ServiceTypeNodePort)
+	svc := ServiceScheme(v.Namespace, serviceName, selector, dbPort, corev1.ServiceTypeClusterIP)
 
 	controllerutil.SetControllerReference(v, svc, r.Scheme)
 	return svc
