@@ -69,7 +69,7 @@ func ServiceScheme(namespace string, servicename string, selector map[string]str
 				Port:       int32(backendPort),
 				TargetPort: intstr.FromInt(backendPort),
 			}},
-			Type: corev1.ServiceTypeNodePort,
+			Type: typePort,
 		},
 	}
 	return s
