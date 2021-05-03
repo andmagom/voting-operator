@@ -58,3 +58,13 @@ func (r *VotingAppReconciler) votingAppDeployment(v *pollv1alpha1.VotingApp) *ap
 	controllerutil.SetControllerReference(v, dep, r.Scheme)
 	return dep
 }
+
+func (r *VotingAppReconciler) ServiceVotingApp(v *pollv1alpha1.VotingApp) *corev1.Service {
+	serviceName := "svc-voting-app-" + v.Name
+	selector := labels(v.Name + "redis-app")
+
+	svc := ServiceScheme(v.Namespace, serviceName, selector, 80, corev1.ServiceTypeNodePort)
+
+	controllerutil.SetControllerReference(v, svc, r.Scheme)
+	return svc
+}
