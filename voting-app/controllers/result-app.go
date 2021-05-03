@@ -8,6 +8,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+const resultAppPort int = 80
+const dbPort int = 5432
+
 func resultAppLabels(v *pollv1alpha1.VotingApp) map[string]string {
 	labels := labels(v.Name + "result-app")
 	return labels
@@ -36,7 +39,7 @@ func (r *VotingAppReconciler) ResultAppDeployment(v *pollv1alpha1.VotingApp) *ap
 						Image: "dockersamples/examplevotingapp_result:before",
 						Name:  "result-webui",
 						Ports: []corev1.ContainerPort{{
-							ContainerPort: 80,
+							ContainerPort: int32(resultAppPort),
 							Name:          "result",
 						}},
 					}},
@@ -49,8 +52,13 @@ func (r *VotingAppReconciler) ResultAppDeployment(v *pollv1alpha1.VotingApp) *ap
 	return dep
 }
 
-func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.Deployment {
+func dbAppLabels(v *pollv1alpha1.VotingApp) map[string]string {
 	labels := labels(v.Name + "db-app")
+	return labels
+}
+
+func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.Deployment {
+	labels := dbAppLabels(v)
 	size := int32(1)
 
 	env := []corev1.EnvVar{}
@@ -87,7 +95,7 @@ func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.De
 						Image: "postgres:9.4",
 						Name:  "db",
 						Ports: []corev1.ContainerPort{{
-							ContainerPort: 5432,
+							ContainerPort: int32(dbPort),
 							Name:          "db",
 						}},
 						Env: env,
@@ -105,7 +113,17 @@ func (r *VotingAppReconciler) ServiceResult(v *pollv1alpha1.VotingApp) *corev1.S
 	serviceName := "svc-result-" + v.Name
 	selector := resultAppLabels(v)
 
-	svc := ServiceScheme(v.Namespace, serviceName, selector, 80, corev1.ServiceTypeNodePort)
+	svc := ServiceScheme(v.Namespace, serviceName, selector, resultAppPort, corev1.ServiceTypeNodePort)
+
+	controllerutil.SetControllerReference(v, svc, r.Scheme)
+	return svc
+}
+
+func (r *VotingAppReconciler) ServiceDB(v *pollv1alpha1.VotingApp) *corev1.Service {
+	serviceName := "svc-db-" + v.Name
+	selector := dbAppLabels(v)
+
+	svc := ServiceScheme(v.Namespace, serviceName, selector, dbPort, corev1.ServiceTypeNodePort)
 
 	controllerutil.SetControllerReference(v, svc, r.Scheme)
 	return svc
