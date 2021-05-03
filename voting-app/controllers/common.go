@@ -49,13 +49,44 @@ func (r *VotingAppReconciler) ensureDeployment(
 	return nil, nil
 }
 
+func (r *VotingAppReconciler) ensureService(request reconcile.Request,
+	instance *pollv1alpha1.VotingApp,
+	s *corev1.Service,
+) (*reconcile.Result, error) {
+	found := &corev1.Service{}
+	err := r.Client.Get(context.TODO(), types.NamespacedName{
+		Name:      s.Name,
+		Namespace: instance.Namespace,
+	}, found)
+	if err != nil && errors.IsNotFound(err) {
+
+		// Create the service
+		log.Info("Creating a new Service", "Service.Namespace", s.Namespace, "Service.Name", s.Name)
+		err = r.Client.Create(context.TODO(), s)
+
+		if err != nil {
+			// Creation failed
+			log.Error(err, "Failed to create new Service", "Service.Namespace", s.Namespace, "Service.Name", s.Name)
+			return &reconcile.Result{}, err
+		} else {
+			// Creation was successful
+			return nil, nil
+		}
+	} else if err != nil {
+		// Error that isn't due to the service not existing
+		log.Error(err, "Failed to get Service")
+		return &reconcile.Result{}, err
+	}
+
+	return nil, nil
+}
+
 func labels(tier string) map[string]string {
 	return map[string]string{
 		"app":  "operators",
 		"tier": tier,
 	}
 }
-
 
 func ServiceScheme(namespace string, servicename string, selector map[string]string, backendPort int, typePort corev1.ServiceType) *corev1.Service {
 	s := &corev1.Service{

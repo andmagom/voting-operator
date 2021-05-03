@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -71,26 +72,48 @@ func (r *VotingAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// your logic here
 	// Check deployments are the expected
 	var result *reconcile.Result
 
+	// == Voting App ==========
+
 	/*
-	When creating a deployment the error is "Not Found" the second time the method will return "nil"
+		When creating a deployment the error is "Not Found" the second time the method will return "nil"
 	*/
 	result, err = r.ensureDeployment(req, votingapp, r.votingAppDeployment(votingapp))
 	if result != nil {
 		return *result, err
 	}
+
+	result, err = r.ensureService(req, votingapp, r.ServiceVotingApp(votingapp))
+	if result != nil {
+		return *result, err
+	}
+
+	// == DB Postgres ==========
 	result, err = r.ensureDeployment(req, votingapp, r.DBDeployment(votingapp))
 	if result != nil {
 		return *result, err
 	}
+
+	result, err = r.ensureService(req, votingapp, r.DBService(votingapp))
+	if result != nil {
+		return *result, err
+	}
+
+	// == Redis ==========
 	result, err = r.ensureDeployment(req, votingapp, r.RedisDeployment(votingapp))
 	if result != nil {
 		return *result, err
 	}
+
+	// == Result ==========
 	result, err = r.ensureDeployment(req, votingapp, r.ResultAppDeployment(votingapp))
+	if result != nil {
+		return *result, err
+	}
+
+	result, err = r.ensureService(req, votingapp, r.ResultService(votingapp))
 	if result != nil {
 		return *result, err
 	}
