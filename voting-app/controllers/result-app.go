@@ -8,8 +8,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (r *VotingAppReconciler) ResultAppDeployment(v *pollv1alpha1.VotingApp) *appsv1.Deployment {
+func resultAppLabels(v *pollv1alpha1.VotingApp) map[string]string {
 	labels := labels(v.Name + "result-app")
+	return labels
+}
+
+func (r *VotingAppReconciler) ResultAppDeployment(v *pollv1alpha1.VotingApp) *appsv1.Deployment {
+	labels := resultAppLabels(v)
 	size := int32(1)
 
 	dep := &appsv1.Deployment{
@@ -94,4 +99,14 @@ func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.De
 
 	controllerutil.SetControllerReference(v, dep, r.Scheme)
 	return dep
+}
+
+func (r *VotingAppReconciler) ServiceResult(v *pollv1alpha1.VotingApp) *corev1.Service {
+	serviceName := "svc-result-" + v.Name
+	selector := resultAppLabels(v)
+
+	svc := serviceScheme(v.Namespace, serviceName, selector, 80)
+
+	controllerutil.SetControllerReference(v, svc, r.Scheme)
+	return svc
 }

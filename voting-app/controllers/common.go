@@ -56,7 +56,7 @@ func labels(tier string) map[string]string {
 	}
 }
 
-func serviceScheme(namespace string, servicename string, selector map[string]string, backendPort int, nodePort int32) *corev1.Service {
+func serviceScheme(namespace string, servicename string, selector map[string]string, backendPort int) *corev1.Service {
 	s := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      servicename,
@@ -68,7 +68,6 @@ func serviceScheme(namespace string, servicename string, selector map[string]str
 				Protocol:   corev1.ProtocolTCP,
 				Port:       int32(backendPort),
 				TargetPort: intstr.FromInt(backendPort),
-				NodePort:   nodePort,
 			}},
 			Type: corev1.ServiceTypeNodePort,
 		},
