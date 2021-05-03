@@ -75,3 +75,43 @@ func ServiceScheme(namespace string, servicename string, selector map[string]str
 	}
 	return s
 }
+
+func DeploymentScheme(
+	namespace string,
+	name string,
+	size *int32,
+	labels map[string]string,
+	image string,
+	containerName string,
+	containerPort int32,
+	env []corev1.EnvVar) *appsv1.Deployment {
+	dep := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: size,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Image: image,
+						Name:  containerName,
+						Ports: []corev1.ContainerPort{{
+							ContainerPort: containerPort,
+						}},
+						Env: env,
+					}},
+				},
+			},
+		},
+	}
+
+	return dep
+}

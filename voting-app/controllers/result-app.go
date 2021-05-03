@@ -60,6 +60,7 @@ func dbAppLabels(v *pollv1alpha1.VotingApp) map[string]string {
 func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.Deployment {
 	labels := dbAppLabels(v)
 	size := int32(1)
+	name:= v.Name + "-db"
 
 	env := []corev1.EnvVar{}
 	env = append(env, corev1.EnvVar{
@@ -76,34 +77,7 @@ func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.De
 		Value: "postgres",
 	})
 
-	dep := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      v.Name + "-db",
-			Namespace: v.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &size,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{
-						Image: "postgres:9.4",
-						Name:  "db",
-						Ports: []corev1.ContainerPort{{
-							ContainerPort: int32(dbPort),
-							Name:          "db",
-						}},
-						Env: env,
-					}},
-				},
-			},
-		},
-	}
+	dep:= DeploymentScheme(v.Namespace, name, &size, labels, "postgres:9.4", "db", int32(dbPort), env )
 
 	controllerutil.SetControllerReference(v, dep, r.Scheme)
 	return dep
