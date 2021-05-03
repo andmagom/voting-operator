@@ -25,13 +25,20 @@ func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.De
 	size := int32(1)
 
 	env := []corev1.EnvVar{}
-	env = append(env, corev1.EnvVar{
-		Name:  "PGDATA",
-		Value: "/var/lib/postgresql/data/pgdata",
-	})
+	/*
+		env = append(env, corev1.EnvVar{
+			Name:  "PGDATA",
+			Value: "/var/lib/postgresql/data/pgdata",
+		})
+	*/
 	env = append(env, corev1.EnvVar{
 		Name:  "POSTGRES_USER",
 		Value: "postgres",
+	})
+
+	env = append(env, corev1.EnvVar{
+		Name:  "POSTGRES_HOST_AUTH_METHOD",
+		Value: "trust",
 	})
 
 	env = append(env, corev1.EnvVar{
@@ -46,7 +53,7 @@ func (r *VotingAppReconciler) DBDeployment(v *pollv1alpha1.VotingApp) *appsv1.De
 }
 
 func (r *VotingAppReconciler) DBService(v *pollv1alpha1.VotingApp) *corev1.Service {
-	serviceName := "svc-db-" + v.Name
+	serviceName := "db"
 	selector := dbAppLabels(v)
 
 	svc := ServiceScheme(v.Namespace, serviceName, selector, dbPort, corev1.ServiceTypeClusterIP)

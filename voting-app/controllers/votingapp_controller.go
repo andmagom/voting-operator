@@ -125,6 +125,13 @@ func (r *VotingAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return *result, err
 	}
 
+	// == Worker ========
+	result, err = r.ensureDeployment(req, votingapp, r.workerDeployment(votingapp))
+
+	if result != nil {
+		return *result, err
+	}
+
 	// == Result ==========
 	result, err = r.ensureDeployment(req, votingapp, r.ResultAppDeployment(votingapp))
 	if result != nil {
@@ -132,13 +139,6 @@ func (r *VotingAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	result, err = r.ensureService(req, votingapp, r.ResultService(votingapp))
-	if result != nil {
-		return *result, err
-	}
-
-	// == Worker ========
-	result, err = r.ensureDeployment(req, votingapp, r.workerDeployment(votingapp))
-	fmt.Println("Worker")
 	if result != nil {
 		return *result, err
 	}

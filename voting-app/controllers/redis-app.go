@@ -21,7 +21,7 @@ func (r *VotingAppReconciler) RedisDeployment(v *pollv1alpha1.VotingApp) *appsv1
 }
 
 func (r *VotingAppReconciler) RedisService(v *pollv1alpha1.VotingApp) *corev1.Service {
-	serviceName := "svc-redis-" + v.Name
+	serviceName := "redis"
 	selector := labels(v.Name + "-redis-app")
 
 	svc := ServiceScheme(v.Namespace, serviceName, selector, redisPort, corev1.ServiceTypeClusterIP)
