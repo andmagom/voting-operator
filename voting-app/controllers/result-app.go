@@ -105,7 +105,7 @@ func (r *VotingAppReconciler) ServiceResult(v *pollv1alpha1.VotingApp) *corev1.S
 	serviceName := "svc-result-" + v.Name
 	selector := resultAppLabels(v)
 
-	svc := serviceScheme(v.Namespace, serviceName, selector, 80)
+	svc := ServiceScheme(v.Namespace, serviceName, selector, 80, corev1.ServiceTypeNodePort)
 
 	controllerutil.SetControllerReference(v, svc, r.Scheme)
 	return svc
