@@ -4,7 +4,6 @@ import (
 	pollv1alpha1 "github.com/andmagom/voting-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -20,33 +19,18 @@ func (r *VotingAppReconciler) ResultAppDeployment(v *pollv1alpha1.VotingApp) *ap
 	labels := resultAppLabels(v)
 	size := int32(1)
 
-	dep := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      v.Name + "-result",
-			Namespace: v.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &size,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{
-						Image: "dockersamples/examplevotingapp_result:before",
-						Name:  "result-webui",
-						Ports: []corev1.ContainerPort{{
-							ContainerPort: int32(resultAppPort),
-							Name:          "result",
-						}},
-					}},
-				},
-			},
-		},
-	}
+	env := []corev1.EnvVar{}
+	env = append(env, corev1.EnvVar{
+		Name:  "OPTION_A",
+		Value: v.Spec.OptionA,
+	})
+	env = append(env, corev1.EnvVar{
+		Name:  "OPTION_B",
+		Value: v.Spec.OptionB,
+	})
+
+	deploymentName := v.Name + "-result"
+	dep := DeploymentScheme(v.Namespace, deploymentName, &size, labels, "andmagom/examplevotingapp_result:1.0.0", "result-webui", int32(resultAppPort), env)
 
 	controllerutil.SetControllerReference(v, dep, r.Scheme)
 	return dep
